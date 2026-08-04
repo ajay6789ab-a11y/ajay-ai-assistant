@@ -1,0 +1,72 @@
+name: ajay_ai_assistant
+description: Ajay AI Assistant — a futuristic bilingual (Hindi/English) voice assistant for Android.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ---- State management -------------------------------------------------
+  provider: ^6.1.2
+
+  # ---- Networking -------------------------------------------------------
+  http: ^1.2.1
+
+  # ---- Voice ------------------------------------------------------------
+  speech_to_text: ^6.6.2         # Speech → text (Hindi + English)
+  flutter_tts: ^4.0.2            # Text → speech with voice/pitch/rate control
+
+  # ---- Device control ---------------------------------------------------
+  permission_handler: ^11.3.1    # Runtime permissions (mic, phone, contacts…)
+  url_launcher: ^6.2.6           # tel:, sms:, https:, geo: intents
+  android_intent_plus: ^4.0.3    # Alarm, settings pages, camera, gallery
+  device_info_plus: ^10.1.0
+  battery_plus: ^6.0.1
+  torch_light: ^1.1.0
+  share_plus: ^9.0.0
+  file_picker: ^8.0.3            # File management screen
+
+  # ---- Storage ----------------------------------------------------------
+  sqflite: ^2.3.3                # Offline mirror of the server database
+  path_provider: ^2.1.3
+  shared_preferences: ^2.2.3
+  flutter_secure_storage: ^9.2.2 # JWT + device id at rest (Keystore-backed)
+
+  # ---- Notifications / reminders ---------------------------------------
+  flutter_local_notifications: ^17.1.2
+  timezone: ^0.9.3
+
+  # ---- UI ---------------------------------------------------------------
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.0
+  lottie: ^3.1.2
+  intl: ^0.19.0
+
+  # ---- Optional cloud sync (Firebase) ----------------------------------
+  # Uncomment after running `flutterfire configure`.
+  # firebase_core: ^3.1.0
+  # firebase_auth: ^5.1.0
+  # cloud_firestore: ^5.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
+  fonts:
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Bold.ttf
+          weight: 700

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="theme-color" content="#04050c" />
+<title>Ajay AI Assistant</title>
+<!-- Backend URL. Leave as-is when the backend serves this page (local, Render,
+     Railway, Docker). For static hosting (Netlify/Vercel) either set this to
+     your backend URL, e.g. content="https://ajay-api.onrender.com", or keep the
+     placeholder and let netlify.toml proxy /api/* to the backend. -->
+<meta name="ajay-api-base" content="__SAME_ORIGIN__" />
+<link rel="stylesheet" href="/static/styles.css" />
+<link rel="manifest" href="/manifest.webmanifest" />
+</head>
+<body>
+
+<!-- Shared SVG gradient used by the active bottom-nav icon -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="navgrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38bdf8" /><stop offset="60%" stop-color="#a78bfa" /><stop offset="100%" stop-color="#f472b6" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="stage">
+  <!-- ============================ PHONE ============================ -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen" id="screen">
+
+      <!-- Boot splash -->
+      <div class="splash" id="splash">
+        <div>
+          <div class="logo">A</div>
+          <div class="nm">Ajay AI Assistant</div>
+          <div class="tg">Your voice. Your phone.</div>
+          <div class="bar"><i></i></div>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="statusbar">
+        <span id="clock">9:41</span>
+        <span class="icons">
+          <svg width="15" height="11" viewBox="0 0 24 18" fill="currentColor"><path d="M1 6a16 16 0 0 1 22 0l-2 2a13 13 0 0 0-18 0Zm4 4a10 10 0 0 1 14 0l-2 2a7 7 0 0 0-10 0Zm4 4a4 4 0 0 1 6 0l-3 3Z"/></svg>
+          <svg width="15" height="11" viewBox="0 0 24 18" fill="currentColor"><path d="M2 13h3v4H2zm5-3h3v7H7zm5-4h3v11h-3zm5-4h3v15h-3z"/></svg>
+          <svg width="20" height="11" viewBox="0 0 30 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="24" height="12" rx="3"/><rect x="3" y="3" width="17" height="8" rx="1.5" fill="currentColor" stroke="none"/><path d="M27 5v4" stroke-linecap="round"/></svg>
+        </span>
+      </div>
+
+      <!-- ============================ VIEWS ============================ -->
+      <div class="views">
+
+        <!-- ---------------------------- HOME ---------------------------- -->
+        <section class="view active" id="view-home">
+          <div class="head">
+            <div>
+              <div class="hello" id="greeting">Good evening</div>
+              <div class="title">Hi, I'm Ajay</div>
+              <div class="sub" id="engine-line">Tap the mic and speak in Hindi or English</div>
+            </div>
+            <div class="avatar" id="avatar">A</div>
+          </div>
+
+          <div class="orb-wrap" id="orbWrap">
+            <canvas id="orb" width="520" height="520"></canvas>
+            <div class="orb-ring r1"></div><div class="orb-ring r2"></div><div class="orb-ring r3"></div>
+            <div class="orb-state" id="orbState">tap to speak</div>
+          </div>
+
+          <div class="transcript" id="transcript"></div>
+
+          <div class="mic-row">
+            <button class="mic" id="micBtn" aria-label="Start listening">
+              <svg viewBox="0 0 24 24"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Z"/><path d="M18.5 11.5a.9.9 0 0 0-1.8 0 4.7 4.7 0 0 1-9.4 0 .9.9 0 0 0-1.8 0 6.5 6.5 0 0 0 5.6 6.4V21h-2a.9.9 0 0 0 0 1.8h5.8a.9.9 0 0 0 0-1.8h-2v-3.1a6.5 6.5 0 0 0 5.6-6.4Z"/></svg>
+            </button>
+            <div class="mic-hint" id="micHint">Hold a thought — tap to talk</div>
+          </div>
+
+          <div class="section-label"><span>Quick actions</span><span id="quickHint">personalised</span></div>
+          <div class="quick-grid" id="quickGrid"></div>
+        </section>
+
+        <!-- ---------------------------- CHAT ---------------------------- -->
+        <section class="view" id="view-chat">
+          <div class="head" style="padding-bottom:8px">
+            <div>
+              <div class="title" style="font-size:22px">Conversation</div>
+              <div class="sub">Ajay remembers the context of your chat</div>
+            </div>
+            <div class="pill"><span class="dot" id="engineDot"></span><span id="enginePill">rules</span></div>
+          </div>
+          <div class="chat-scroll" id="chatScroll"></div>
+          <div class="composer">
+            <button class="icon-btn mini-mic" id="chatMic" aria-label="Voice input">
+              <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+            </button>
+            <div class="box">
+              <input id="chatInput" placeholder="Message or speak to Ajay…" autocomplete="off" />
+            </div>
+            <button class="icon-btn send" id="sendBtn" aria-label="Send">
+              <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- --------------------------- HISTORY -------------------------- -->
+        <section class="view" id="view-history">
+          <div class="head" style="padding-bottom:10px">
+            <div>
+              <div class="title" style="font-size:22px">History</div>
+              <div class="sub">Every command, searchable</div>
+            </div>
+          </div>
+          <div class="search">
+            <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+            <input id="historySearch" placeholder="Search commands…" autocomplete="off" />
+          </div>
+          <div class="stats" id="historyStats"></div>
+          <div id="historyList" style="padding-bottom:16px"></div>
+        </section>
+
+        <!-- --------------------------- SETTINGS ------------------------- -->
+        <section class="view" id="view-settings">
+          <div class="head" style="padding-bottom:10px">
+            <div>
+              <div class="title" style="font-size:22px">Settings</div>
+              <div class="sub">Voice, language &amp; privacy</div>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="section-label">Voice &amp; language</div>
+            <div class="row">
+              <div><div class="rl">Assistant voice</div><div class="rd">Used for every spoken reply</div></div>
+              <select id="setVoice"></select>
+            </div>
+            <div class="row">
+              <div><div class="rl">Language</div><div class="rd">Auto detects Hindi &amp; English</div></div>
+              <select id="setLanguage"></select>
+            </div>
+            <div class="row">
+              <div><div class="rl">Speech rate</div><div class="rd" id="rateVal">0.48×</div></div>
+              <input type="range" id="setRate" min="0.2" max="1" step="0.02" />
+            </div>
+            <div class="row">
+              <div><div class="rl">Pitch</div><div class="rd" id="pitchVal">1.00</div></div>
+              <input type="range" id="setPitch" min="0.5" max="2" step="0.05" />
+            </div>
+            <div class="row">
+              <div><div class="rl">Speak replies aloud</div><div class="rd">Text-to-speech on every answer</div></div>
+              <label class="switch"><input type="checkbox" id="setSpeak" /><span class="slider"></span></label>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="section-label">Security &amp; privacy</div>
+            <div class="row">
+              <div><div class="rl">Confirm before calling</div><div class="rd">Always ask before dialling a number</div></div>
+              <label class="switch"><input type="checkbox" id="setConfirmCalls" /><span class="slider"></span></label>
+            </div>
+            <div class="row">
+              <div><div class="rl">Confirm before messaging</div><div class="rd">Review the text before it is sent</div></div>
+              <label class="switch"><input type="checkbox" id="setConfirmMsgs" /><span class="slider"></span></label>
+            </div>
+            <div class="row">
+              <div><div class="rl">Save command history</div><div class="rd">Keep a searchable log on this device</div></div>
+              <label class="switch"><input type="checkbox" id="setHistory" /><span class="slider"></span></label>
+            </div>
+            <div class="row">
+              <div><div class="rl">Personalised memory</div><div class="rd">Learn preferences &amp; frequent contacts</div></div>
+              <label class="switch"><input type="checkbox" id="setMemory" /><span class="slider"></span></label>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="section-label">What Ajay remembers</div>
+            <div class="row" style="display:block">
+              <div id="memoryChips" style="display:flex;flex-wrap:wrap"></div>
+              <button class="danger-btn" style="margin-top:10px" id="wipeMemory">Erase all memories</button>
+            </div>
+          </div>
+
+          <div class="group" style="padding-bottom:20px">
+            <div class="section-label">Danger zone</div>
+            <button class="danger-btn" id="clearHistory">Clear command history</button>
+            <div style="height:8px"></div>
+            <button class="danger-btn" id="deleteAccount">Delete account &amp; all data</button>
+            <div class="sub" style="text-align:center;margin-top:12px" id="buildLine">v1.0.0 · offline-first</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================ NAV ============================ -->
+      <nav class="nav" id="nav">
+        <button data-view="home" class="on">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg>Home
+        </button>
+        <button data-view="chat">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></svg>Chat
+        </button>
+        <button data-view="history">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>History
+        </button>
+        <button data-view="settings">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 3 15H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 10 3.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 20.4 10H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings
+        </button>
+      </nav>
+
+      <!-- ===================== PERMISSION SHEET ===================== -->
+      <div class="sheet-backdrop" id="sheetBackdrop">
+        <div class="sheet">
+          <div class="grip"></div>
+          <div class="sicon" id="sheetIcon">📞</div>
+          <h3 id="sheetTitle">Call Rahul?</h3>
+          <p id="sheetBody">Ajay needs your confirmation before placing a call. Nothing is dialled until you allow it.</p>
+          <div class="payload" id="sheetPayload"></div>
+          <div class="btns">
+            <button class="cancel" id="sheetCancel">Cancel</button>
+            <button class="allow" id="sheetAllow">Allow</button>
+          </div>
+          <div class="note">🔒 Runtime permission · revocable in Android settings</div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <!-- ========================= SIDE PANEL ========================= -->
+  <aside class="side">
+    <h1>Ajay AI Assistant</h1>
+    <p class="lead">
+      A live, working demo of the app: this UI is the web mirror of the Flutter
+      client and it talks to the real <span class="kbd">FastAPI</span> brain running
+      in this workspace — bilingual NLU, memory, planner and tools included.
+    </p>
+    <ul>
+      <li>Tap the mic to speak (Chrome/Edge). Speech-to-text and text-to-speech run in the browser, exactly like the phone's engines.</li>
+      <li>Sensitive actions (call / message) always raise a consent sheet first.</li>
+      <li>Weather, news, translation and the calculator hit real services.</li>
+      <li>History, memory and settings persist in SQLite via the API.</li>
+    </ul>
+    <div class="try" id="tryChips"></div>
+  </aside>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

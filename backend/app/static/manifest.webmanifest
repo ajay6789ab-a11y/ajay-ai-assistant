@@ -1,0 +1,18 @@
+{
+  "name": "Ajay AI Assistant",
+  "short_name": "Ajay",
+  "description": "Futuristic bilingual voice assistant for Android — Hindi & English.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#04050c",
+  "theme_color": "#04050c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

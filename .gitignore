@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+backend/data/*.db*
+backend/.env
+.env
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/.packages
+mobile/ios/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/.gradle/
+*.jks
+*.keystore
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

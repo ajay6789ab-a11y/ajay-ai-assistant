@@ -1,0 +1,29 @@
+# --------------------------------------------------------------------------
+# One-command local run:  docker compose up
+# Then open http://localhost:8000 in Chrome.
+#
+# This is the easiest way to run the backend if you don't want to install
+# Python and pip yourself — only Docker Desktop is required.
+# --------------------------------------------------------------------------
+services:
+  api:
+    build: ./backend
+    container_name: ajay-api
+    ports:
+      - "8000:8000"
+    environment:
+      # CHANGE THIS before exposing the service to the internet.
+      JWT_SECRET: "change-me-to-a-long-random-string"
+      DEBUG: "false"
+      DB_PATH: /app/data/ajay.db
+      CORS_ORIGINS: "*"
+      # Uncomment and add your key to enable GPT instead of the rule engine:
+      # AI_API_KEY: "sk-..."
+      # AI_MODEL: "gpt-4o-mini"
+    volumes:
+      # Keeps chat history, tasks and notes across container restarts.
+      - ajay-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ajay-data:

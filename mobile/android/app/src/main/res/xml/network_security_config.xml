@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security policy.
+
+  RELEASE builds: HTTPS only. This is what you want when the app talks to a
+  hosted backend (Render, Railway, your own domain) — those are all HTTPS, so
+  nothing extra is needed and your traffic stays encrypted.
+
+  DEBUG builds (`flutter run`): cleartext is allowed everywhere via
+  <debug-overrides>. That lets you point the app at a laptop running
+  `uvicorn ... --host 0.0.0.0` over plain HTTP on your WiFi, which is the
+  normal development loop.
+
+  NOTE ON PRIVATE IPs
+  -------------------
+  Android matches <domain> entries for IP literals EXACTLY. `includeSubdomains`
+  does not expand `192.168.1.0` into the 192.168.1.* range — that is a common
+  and confusing mistake. If you need a RELEASE build to reach a plain-HTTP
+  server on your LAN, add that machine's exact IP below, e.g.
+
+      <domain includeSubdomains="false">192.168.1.7</domain>
+
+  ...or, only for throwaway local testing, set
+  cleartextTrafficPermitted="true" on <base-config>. Never ship that to users.
+-->
+<network-security-config>
+
+    <!-- Default for release: encrypted traffic only. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Loopback addresses used by the Android emulator and adb reverse.
+         These are exact IP literals, so they match correctly. -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>   <!-- emulator -> host machine -->
+        <domain includeSubdomains="false">10.0.3.2</domain>   <!-- Genymotion -> host machine -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+
+    <!-- Applies ONLY to debuggable builds (`flutter run`, debug APKs).
+         Stripped automatically from release builds by the Android toolchain,
+         so this cannot weaken the app you distribute. -->
+    <debug-overrides cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+
+</network-security-config>

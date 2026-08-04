@@ -1,0 +1,48 @@
+# --------------------------------------------------------------------------
+# Render.com Blueprint — deploys the Ajay AI Assistant backend.
+#
+# How to use:
+#   1. Push this repo to GitHub.
+#   2. On render.com: New -> Blueprint -> pick your repo.
+#   3. Render reads this file and creates the service automatically.
+#
+# The free tier sleeps after ~15 min of inactivity; the first request after
+# sleeping takes ~30-50 s to wake. That is normal, not a bug in the app.
+# --------------------------------------------------------------------------
+services:
+  - type: web
+    name: ajay-ai-assistant-api
+    runtime: python
+    plan: free
+    region: singapore          # closest to India; also: oregon, frankfurt
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+
+    envVars:
+      # Auto-generates a strong random secret on first deploy.
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: DEBUG
+        value: "false"
+
+      # SQLite path. NOTE: on the free tier this disk is ephemeral — data is
+      # wiped on redeploy/restart. Attach a paid Render Disk (or move to
+      # Postgres) if you need chat history to persist permanently.
+      - key: DB_PATH
+        value: /opt/render/project/src/backend/data/ajay.db
+
+      # Domains allowed to call this API from a browser. Add your Netlify URL
+      # here, comma-separated, e.g. "https://ajay-assistant.netlify.app"
+      - key: CORS_ORIGINS
+        value: "*"
+
+      # Optional: paste your OpenAI key in the Render dashboard to switch the
+      # assistant from the offline rule engine to GPT. sync:false means "ask me
+      # in the dashboard, don't store it in git".
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: gpt-4o-mini

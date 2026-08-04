@@ -1,0 +1,56 @@
+# --------------------------------------------------------------------------
+# Netlify configuration — Ajay AI Assistant (web UI only)
+#
+# READ THIS FIRST
+# ---------------
+# Netlify serves STATIC files (HTML/CSS/JS). It CANNOT run the Python FastAPI
+# backend, and it cannot build an Android APK. So Netlify alone is NOT enough.
+#
+# Correct setup is two pieces:
+#   1. Backend  -> Render / Railway / Fly.io   (see render.yaml, backend/Dockerfile)
+#   2. Web UI   -> Netlify (this file), proxying /api/* to that backend
+#
+# STEP: after your backend is live, replace BACKEND_URL below with its real
+# address (e.g. https://ajay-ai-assistant-api.onrender.com) and redeploy.
+# The proxy keeps requests same-origin, so you get no CORS errors and no code
+# changes are needed.
+# --------------------------------------------------------------------------
+
+[build]
+  # The web UI is plain static files — nothing to compile.
+  publish = "backend/app/static"
+  command = "echo 'Static site - no build step required'"
+
+# --------------------------------------------------------------------------
+# Proxy API calls to the real backend.
+# The UI calls /api/... on its own origin; Netlify forwards them onward.
+# --------------------------------------------------------------------------
+[[redirects]]
+  from = "/api/*"
+  to = "https://BACKEND_URL/api/:splat"     # <-- CHANGE THIS
+  status = 200                              # 200 = proxy (not a browser redirect)
+  force = true
+
+# index.html asks for /static/styles.css and /static/app.js, but on Netlify
+# those files sit at the site root. Map them so the paths keep working.
+[[redirects]]
+  from = "/static/*"
+  to = "/:splat"
+  status = 200
+
+# Single-page fallback.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# --------------------------------------------------------------------------
+# Security headers. Microphone access requires HTTPS — Netlify provides it
+# automatically, which is what makes voice input work in the browser.
+# --------------------------------------------------------------------------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "microphone=(self), camera=(), geolocation=(self)"
