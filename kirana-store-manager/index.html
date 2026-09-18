@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kirana Store Manager</title>
+<meta name="description" content="Free, offline-first kirana (grocery) store manager — billing, stock, udhaar ledger, purchases, expenses, reports and backup. No paid services." />
+<meta name="theme-color" content="#1f6feb" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Kirana" />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+
+<!-- Shown until the app boots; replaced by the lock screen or the dashboard. -->
+<div id="boot" class="lockscreen">
+  <div class="lock-card">
+    <div class="lock-logo">K</div>
+    <h1>Kirana Store Manager</h1>
+    <p class="muted small">Loading…</p>
+  </div>
+</div>
+
+<div id="shell" class="hidden">
+  <div id="netbar" class="netbar hidden" data-i18n="errors.networkFree"></div>
+
+  <header class="topbar no-print">
+    <button id="backBtn" class="icon-btn back hidden" type="button" aria-label="Back">‹</button>
+    <div class="grow">
+      <h1 id="screenTitle">Kirana Store Manager</h1>
+      <div class="shop" id="shopLine"></div>
+    </div>
+    <button id="langBtn" class="icon-btn" type="button" aria-label="Switch language" title="Language">अ</button>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <nav class="bottomnav no-print" id="bottomnav" aria-label="Main navigation">
+    <a href="#/dashboard" data-route="dashboard"><span class="ico">▦</span><span data-i18n="nav.dashboard"></span></a>
+    <a href="#/sales" data-route="sales"><span class="ico">🧾</span><span data-i18n="nav.sales"></span></a>
+    <a href="#/sale/new" data-route="sale" class="fab-slot" aria-label="New sale"><span class="fab">+</span></a>
+    <a href="#/products" data-route="products"><span class="ico">📦</span><span data-i18n="nav.products"></span></a>
+    <a href="#/more" data-route="more"><span class="ico">⋯</span><span data-i18n="nav.more"></span></a>
+  </nav>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/ui/app.js"></script>
+</body>
+</html>
