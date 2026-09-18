@@ -305,6 +305,70 @@ def _title(value: str) -> str:
     return " ".join(w.capitalize() if w.islower() else w for w in value.split())
 
 
+# --- reminder title cleanup ------------------------------------------------
+# A reminder capture usually still carries the *when* ("5 minute baad paani
+# peene ka", "call papa at 5pm").  The time can sit at either end, so strip
+# both, plus the trailing case particle that Hindi/Hinglish leaves behind.
+_REMINDER_TIME_PREFIX = re.compile(
+    r"^(?:(?:in|after|aaj|today|kal|tomorrow|parso|subah|shaam|raat|morning|"
+    r"evening|night|सुबह|शाम|रात|आज|कल|परसों)\s+)?"
+    r"(?:\d{1,3}\s*(?:minutes?|mins?|minute|मिनट|hours?|hrs?|ghante|घंटे|घंटा|"
+    r"seconds?|secs?|सेकंड|days?|din)\s*)?"
+    r"(?:baad|later|बाद|में|ke\s+baad|के\s*बाद|baje|बजे|am|pm)?\s*",
+    re.I,
+)
+_REMINDER_TIME_SUFFIX = re.compile(
+    r"\b(at|by|on|tomorrow|today|kal|aaj|में|baad|बाद|बजे|baje|subah|सुबह|"
+    r"shaam|शाम|raat|रात)\b.*$",
+    re.I,
+)
+_REMINDER_PARTICLE_LATIN = re.compile(
+    r"[\s.,-]*(?<!\w)(?:ke\s+liye|ka|ki|ke|ko|the|an?|for|to)(?!\w)[\s.,-]*$",
+    re.I,
+)
+_REMINDER_PARTICLE_DEVANAGARI = re.compile(
+    r"[\s.,-]*(?:के\s+लिए|का|की|के|को|मुझे)[\s.,-]*$",
+)
+# Leading article left over from "reminder for the doctor appointment".
+_REMINDER_ARTICLE = re.compile(r"^(?:the|an|a|ek)\s+", re.I)
+# Leftovers that appear when a verb is captured as the title ("reminder laga do").
+_REMINDER_FILLER = {
+    "do", "de", "dena", "diya", "na", "o", "karo", "kar", "karna", "hai", "hain",
+    "please", "the", "a", "an", "ki", "ka", "ke", "ko", "to", "for", "me", "mujhe",
+    "दो", "दे", "देना", "करो", "है", "का", "की", "के", "को", "मुझे",
+}
+
+
+def _strip_particle(value: str) -> str:
+    """Drop a trailing Hindi/Hinglish case particle ("... ka", "... ke liye")."""
+    return _REMINDER_PARTICLE_DEVANAGARI.sub(
+        "", _REMINDER_PARTICLE_LATIN.sub("", value.strip(" .,-")).strip(" .,-")
+    ).strip(" .,-")
+
+
+def _reminder_title(raw_title: str) -> str:
+    """Strip when-phrases and particles; return '' when nothing meaningful is left."""
+    text = raw_title.strip(" .,-")
+    if not text or text.lower() in _REMINDER_FILLER:
+        return ""
+
+    def keep(candidate: str) -> str | None:
+        candidate = _REMINDER_ARTICLE.sub("", candidate.strip(" .,-")).strip(" .,-")
+        if candidate and candidate.lower() not in _REMINDER_FILLER:
+            return candidate
+        return None
+
+    head = _REMINDER_TIME_PREFIX.sub("", text, count=1).strip(" .,-")
+    for candidate in (
+        _strip_particle(_REMINDER_TIME_SUFFIX.sub("", head)),   # drop both ends
+        _strip_particle(head),                                  # leading time only
+        _strip_particle(_REMINDER_TIME_SUFFIX.sub("", text)),   # trailing time only
+    ):
+        if kept := keep(candidate):
+            return kept
+    return ""
+
+
 # Words that are never a city name — used to reject bad weather captures.
 _CITY_STOPWORDS = {
     "today", "tomorrow", "now", "hai", "kaisa", "kaisi", "here", "outside",
@@ -436,7 +500,9 @@ RULES: list[tuple[str, re.Pattern[str], str, float]] = [
 
     # ---- reminders / tasks / notes --------------------------------------
     ("reminder", re.compile(r"^(?:remind\s+me\s+(?:to\s+)?|reminder\s+(?:for|to)\s+|set\s+a?\s*reminder\s+(?:to|for)\s+)(.+)$", re.I), "title", 0.95),
-    ("reminder", re.compile(r"^(?:mujhe\s+)?(.+?)\s*(?:ki|की|ka|का)?\s*(?:yaad\s*dila(?:na|o|do)?|याद\s*दिला(?:ना|ओ|दो)?|reminder\s*laga(?:o|do)?)$", re.I), "title", 0.9),
+    ("reminder", re.compile(r"^(?:mujhe\s+)?(.+?)\s*(?:ki|की|ka|का)?\s*(?:yaad\s*dila(?:na|o|\s*do|\s*dena)?|याद\s*दिला(?:ना|ओ|\s*दो|\s*देना)?|reminder\s*lag(?:ao|a\s*(?:do|de|dena|diya)?|ana))$", re.I), "title", 0.9),
+    # Verb-first Hindi/Hinglish: "yaad dilana dawa lena", "reminder laga do paani peena"
+    ("reminder", re.compile(r"^(?:mujhe\s+)?(?:yaad\s*dila(?:na|o|\s*do|\s*dena)|याद\s*दिला(?:ना|ओ|\s*दो|\s*देना)|reminder\s*lag(?:ao|a\s*(?:do|de|dena|diya)?|ana))\s*(?:ki\s+|कि\s+|to\s+|के\s+लिए\s+)?(.+?)$", re.I), "title", 0.88),
     ("task", re.compile(r"^(?:add|create|new)\s+(?:a\s+)?(?:task|todo|to-?do)\s*(?::|to)?\s*(.+)$", re.I), "title", 0.95),
     # "Add buy milk to my todo list" / "put call bank in my task list"
     ("task", re.compile(r"^(?:add|put|note)\s+(.+?)\s+(?:to|in|into|on)\s+(?:the\s+|my\s+)?(?:todo|to-?do|task)s?\s*(?:list)?$", re.I), "title", 0.95),
@@ -659,10 +725,7 @@ def _build(  # noqa: C901 - a dispatch table by nature
     # ------------------------------------------------ reminders/tasks/notes
     if name == "reminder":
         when = parse_time(raw, now)
-        title = re.sub(
-            r"\b(at|by|on|tomorrow|today|kal|aaj|में|baad|बाद|बजे|baje|subah|सुबह|shaam|शाम|raat|रात)\b.*$",
-            "", first, flags=re.I,
-        ).strip(" .,-") or first
+        title = _reminder_title(first)
         if not title:
             return None
         stamp = (when or now + timedelta(hours=1))

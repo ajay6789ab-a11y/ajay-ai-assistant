@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -165,3 +165,48 @@ def test_add_task_word_orders(text: str, title: str) -> None:
     assert intent.action_type == ActionType.CREATE_TASK
     assert intent.confidence >= 0.85
     assert intent.entities["title"] == title
+
+
+# ---------------------------------------------------------------------------
+# Regression: Hinglish reminder phrasings. "reminder laga do paani peena" and
+# "yaad dilana dawa lena" put the verb at the FRONT, which no rule matched, so
+# they fell through to smalltalk at 0.30. The title also had to survive a
+# leading relative time ("5 minute baad ... ka") and a trailing case particle
+# ("... ka", "... ke liye") without eating the last letter of a word ("papa").
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    "text,title",
+    [
+        ("reminder laga do paani peena", "paani peena"),
+        ("yaad dilana dawa lena", "dawa lena"),
+        ("mujhe dawa lene ki yaad dila do", "dawa lene"),
+        ("5 minute baad paani peene ka reminder laga do", "paani peene"),
+        ("mujhe paani peene ki yaad dilana", "paani peene"),
+        ("mujhe yaad dilana meeting ke liye", "meeting"),
+        ("mujhe kal subah uthne ka reminder lagao", "subah uthne"),
+        ("remind me to call papa", "call papa"),
+        ("remind me to call papa at 5pm", "call papa"),
+        ("set a reminder to pay rent", "pay rent"),
+        ("reminder for the doctor appointment", "doctor appointment"),
+        ("remind me to buy an umbrella", "buy an umbrella"),
+    ],
+)
+def test_reminder_word_orders(text: str, title: str) -> None:
+    intent = nlu.parse(text)
+    assert intent.action_type == ActionType.CREATE_REMINDER
+    assert intent.confidence >= 0.85
+    assert intent.entities["title"] == title
+
+
+@pytest.mark.parametrize("text", ["reminder laga do", "reminder lagao", "yaad dilana"])
+def test_reminder_without_title_falls_back_to_chat(text: str) -> None:
+    """A bare verb with nothing to remind about must not invent a reminder."""
+    intent = nlu.parse(text)
+    assert intent.name == "chat"
+    assert intent.action_type == ActionType.SPEAK_ONLY
+
+
+def test_reminder_relative_time_is_applied() -> None:
+    intent = nlu.parse("5 minute baad paani peene ka reminder laga do", now=NOW)
+    assert intent.action_type == ActionType.CREATE_REMINDER
+    assert intent.entities["time"] == (NOW + timedelta(minutes=5)).isoformat()
