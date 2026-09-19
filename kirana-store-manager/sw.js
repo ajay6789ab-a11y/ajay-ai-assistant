@@ -9,7 +9,7 @@
  * Business data never goes through here — it lives in IndexedDB.
  */
 
-const VERSION = 'kirana-v1.0.0';
+const VERSION = 'kirana-v1.0.1';
 const SHELL_CACHE = `${VERSION}-shell`;
 
 const SHELL = [
@@ -60,6 +60,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;    // never touch cross-origin calls
+
+  // Never route downloads (backups, exports) through the app-shell cache —
+  // they are user files, not app assets, and some are large.
+  if (/\.(zip|json|csv)$/i.test(url.pathname)) return;
 
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then((cached) => {

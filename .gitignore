@@ -1,6 +1,9 @@
 # Node
 node_modules/
 
+# Build/deploy artefacts
+*.zip
+
 # Python
 __pycache__/
 *.py[cod]
